@@ -37,10 +37,6 @@ public class ProfessorService {
     public void update(Long id, Professor professor){
         Optional<Professor> professorFromDb = findById(id);
 
-        if(professorFromDb.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Professor não foi encontrado no banco de dados");
-        }
-
         Professor professorUpdated = professorFromDb.get();
 
         professorUpdated.setName(professor.getName());

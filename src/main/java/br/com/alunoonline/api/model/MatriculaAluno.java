@@ -31,5 +31,5 @@ public class MatriculaAluno implements Serializable {
 
     @ManyToOne
     @JoinColumn(name = "disciplina_id")
-    public Disciplina disciplina;
+    private Disciplina disciplina;
 }

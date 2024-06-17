@@ -37,11 +37,6 @@ public class AlunoService {
         // Buscar o aluno no banco de dados
         Optional<Aluno> alunoFromDb = findById(id);
 
-        // Lança exceção se não encontrar o aluno no BD
-        if(alunoFromDb.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado no banco de dados");
-        }
-
         // Se chegar aqui, existe aluno, então precisa armazenar em uma variável
         Aluno alunoUpdated = alunoFromDb.get();
 
