@@ -1,6 +1,7 @@
 package br.com.alunoonline.api.controller;
 
 import br.com.alunoonline.api.model.Aluno;
+import br.com.alunoonline.api.model.AlunoRelatorioListaDTO;
 import br.com.alunoonline.api.service.AlunoService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -39,6 +40,16 @@ public class AlunoController {
     @ResponseStatus(HttpStatus.OK)
     public Optional<Aluno> findById(@PathVariable Long id) {
         return alunoService.findById(id);
+    }
+
+    @GetMapping("/relatorio/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public AlunoRelatorioListaDTO emitirRelatorio(@PathVariable Long id) {
+        Aluno aluno = alunoService.findById(id).get();
+        AlunoRelatorioListaDTO dto = new AlunoRelatorioListaDTO();
+        dto.setName(aluno.getName());
+        dto.setEmail(aluno.getEmail());
+        return dto;
     }
 
     @GetMapping("/{email}/{cpf}")
