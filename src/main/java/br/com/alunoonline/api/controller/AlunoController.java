@@ -5,15 +5,12 @@ import br.com.alunoonline.api.model.AlunoRelatorioListaDTO;
 import br.com.alunoonline.api.service.AlunoService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
-@Slf4j
 @AllArgsConstructor
 @RestController
 @RequestMapping("/aluno")
@@ -24,22 +21,25 @@ public class AlunoController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public void create(@Valid  @RequestBody Aluno aluno) {
-        log.info("Iniciando criação de aluno");
         alunoService.create(aluno);
-        log.info("Encerrando criação de aluno");
     }
 
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)
     public List<Aluno> findAll() {
-
         return alunoService.findAll();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Optional<Aluno> findById(@PathVariable Long id) {
         return alunoService.findById(id);
+    }
+
+    @GetMapping("/name/{name}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Aluno> findByName(@PathVariable String name) {
+        return alunoService.findByName(name);
     }
 
     @GetMapping("/relatorio/{id}")
@@ -54,17 +54,13 @@ public class AlunoController {
 
     @GetMapping("/{email}/{cpf}")
     @ResponseStatus(HttpStatus.OK)
-    public Optional<Aluno> buscarPorEmaileCpf(@PathVariable String email ,
+    public Optional<Aluno> findAlunoByEmailAndCpf(@PathVariable String email ,
                                               @PathVariable String cpf) {
         return Optional.of(
-                alunoService.buscarAlunoPorEmaileCpf(email, cpf)
+                alunoService.findAlunoByEmailAndCpf(email, cpf)
         );
     }
 
-    // FAZER O CONTROLLER: PUT
-    // A RESPOSTA DEVE SER NO_CONTENT
-    // PRECISO DO ID IGUAL PRECISEI NO FINDBYID
-    // PRECISO DO ALUNO NO CORPO DA REQUISIÇÃO IGUAL PRECISEI NO CREATE
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void update(@PathVariable Long id, @RequestBody Aluno aluno){

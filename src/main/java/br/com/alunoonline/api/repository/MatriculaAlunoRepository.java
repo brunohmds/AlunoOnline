@@ -16,10 +16,10 @@ public interface MatriculaAlunoRepository extends JpaRepository<MatriculaAluno, 
 
     @Query("SELECT m FROM MatriculaAluno m " +
             "JOIN m.aluno a WHERE a.name =:nome")
-    List<MatriculaAluno> findMatriculasByAlunoNome(@Param("nome") String nome);
+    List<MatriculaAluno> findMatriculasByAlunoName(@Param("nome") String nome);
 
     @Query("SELECT m FROM MatriculaAluno m JOIN m.disciplina d WHERE d.name = :nome")
-    List<MatriculaAluno> findMatriculasByDisciplinaNome(@Param("nome") String nome);
+    List<MatriculaAluno> findMatriculasByDisciplinaName(@Param("nome") String nome);
 
 
 }

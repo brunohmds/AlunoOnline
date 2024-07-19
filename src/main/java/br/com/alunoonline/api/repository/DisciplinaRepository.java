@@ -12,5 +12,5 @@ public interface DisciplinaRepository extends JpaRepository<Disciplina, Long> {
     List<Disciplina> findByProfessorId(Long professorId);
 
     @Query("SELECT d FROM Disciplina d ORDER BY d.name")
-    List<Disciplina> findAllOrderByNome();
+    List<Disciplina> findAllOrderByName();
 }

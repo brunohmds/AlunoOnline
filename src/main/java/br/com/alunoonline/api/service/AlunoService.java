@@ -1,10 +1,12 @@
 package br.com.alunoonline.api.service;
 
+import br.com.alunoonline.api.client.ViaCepClient;
 import br.com.alunoonline.api.model.Aluno;
 import br.com.alunoonline.api.repository.AlunoRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -14,66 +16,77 @@ import java.util.Optional;
 
 
 @Slf4j
-@Service
 @AllArgsConstructor
+@Service
 public class AlunoService {
 
-    AlunoRepository alunoRepository;
+    private AlunoRepository alunoRepository;
+    private CacheManager cacheManager;
+    private ViaCepClient viaCepClient;
 
     public void create(Aluno aluno) {
+        log.info("Iniciando criação de aluno");
+        atualizaEnderecoPorCep(aluno);
         alunoRepository.save(aluno);
+        log.info("Encerrando criação de aluno");
+        cacheManager.getCache("lista_alunos").clear();
     }
 
+    @Cacheable("lista_alunos")
     public List<Aluno> findAll() {
+        log.info("Listagem total de alunos");
         return alunoRepository.findAll();
     }
 
-    public Aluno buscarAlunoPorEmaileCpf(String email,
+    public Aluno findAlunoByEmailAndCpf(String email,
                                          String cpf){
-        return alunoRepository.buscarAlunoPorEmaileCpf(email, cpf);
+        log.info("Listagem total de alunos por email e cpf");
+        return alunoRepository.findAlunoByEmailAndCpf(email, cpf);
     }
 
     public Optional<Aluno> findById(Long id) {
         return alunoRepository.findById(id);
     }
 
+    public List<Aluno> findByName(String name) {
+        return alunoRepository.findByName(name);
+    }
+
     public void update(Long id, Aluno aluno) {
-        // PRIMEIRO PASSO: PROCURAR SE O ALUNO EXISTE
+        log.info("Iniciando atualização de aluno");
         Optional<Aluno> alunoFromDb = findById(id);
 
-        // LANÇA UMA EXCEPTION SE NÃO ENCONTRAR O ALUNO NO BD.
         if (alunoFromDb.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado no banco de dados");
         }
 
-        // SE CHEGAR AQUI, SIGNIFICA QUE EXISTE ALUNO, ENTÃO
-        // VOU ARMAZENA-LO EM UMA VARIÁVEL :)
         Aluno alunoUpdated = alunoFromDb.get();
 
-        // PEGO ESSE alunoUpdated DE CIMA E FAÇO
-        // OS SETS NECESSÁRIOS PARA ATUALIZAR OS
-        // ATRIBUTOS DELE.
-        // alunoUpdated: Aluno que está na memória RAM para ser atualizado
-        // aluno: é o objeto java que anteriormente era uma JSON vindo do front.
         alunoUpdated.setName(aluno.getName());
         alunoUpdated.setCpf(aluno.getCpf());
         alunoUpdated.setEmail(aluno.getEmail());
 
-        // PEGUEI A CÓPIA DO ALUNO ALTERADO NA MEMÓRIA RAM E DEVOLVI
-        // ESSE ALUNO, AGORA, ATUALIZADO, PARA O BANCO DE DADOS.
-
         alunoRepository.save(alunoUpdated);
+        log.info("Encerrando criação de aluno");
+        cacheManager.getCache("lista_aluno").clear();
     }
 
-    // FAZER O DELETEBYID, ONDE O PARMETRO É SÓ O ID MESMO...
-    // VOID
-    // NÃO COLOQUEI O NOME DELETEBYID ATOA
-    // SERÁ QUE O REPOSITORY GOSTA DESSE NOME TBM?  #)
-    // Faça tratamento para ver se o aluno existe no findbyid
     public void deleteById(Long id) {
         log.info("Iniciando exclusão de alunos");
+        Optional<Aluno> alunoFromDb = findById(id);
         alunoRepository.deleteById(id);
+        cacheManager.getCache("lista_aluno").clear();
         log.info("Encerrando exclusão de alunos");
+    }
+
+    private void atualizaEnderecoPorCep(Aluno aluno) {
+        var cep = aluno.getEndereco().getCep();
+        var enderecoResponse = viaCepClient.consultaCep(cep);
+        aluno.getEndereco().setLocalidade(enderecoResponse.getLocalidade());
+        aluno.getEndereco().setUf(enderecoResponse.getUf());
+        aluno.getEndereco().setBairro(enderecoResponse.getBairro());
+        aluno.getEndereco().setComplemento(enderecoResponse.getComplemento());
+        aluno.getEndereco().setLogradouro(enderecoResponse.getLogradouro());
     }
 
 }
