@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +24,7 @@ public class AlunoService {
     private AlunoRepository alunoRepository;
     private CacheManager cacheManager;
     private ViaCepClient viaCepClient;
+    private List<Aluno> alunos = new ArrayList<>();
 
     public void create(Aluno aluno) {
         log.info("Iniciando criação de aluno");
@@ -30,6 +32,10 @@ public class AlunoService {
         alunoRepository.save(aluno);
         log.info("Encerrando criação de aluno");
         cacheManager.getCache("lista_alunos").clear();
+    }
+
+    public void createAll(List<Aluno> listaAlunos){
+        alunoRepository.saveAll(listaAlunos);
     }
 
     @Cacheable("lista_alunos")
@@ -79,14 +85,20 @@ public class AlunoService {
         log.info("Encerrando exclusão de alunos");
     }
 
-    private void atualizaEnderecoPorCep(Aluno aluno) {
+    public void atualizaEnderecoPorCep(Aluno aluno) {
         var cep = aluno.getEndereco().getCep();
-        var enderecoResponse = viaCepClient.consultaCep(cep);
-        aluno.getEndereco().setLocalidade(enderecoResponse.getLocalidade());
-        aluno.getEndereco().setUf(enderecoResponse.getUf());
-        aluno.getEndereco().setBairro(enderecoResponse.getBairro());
-        aluno.getEndereco().setComplemento(enderecoResponse.getComplemento());
-        aluno.getEndereco().setLogradouro(enderecoResponse.getLogradouro());
-    }
+        log.info("Consultando CEP {} ", cep);
+        try{
+            var enderecoResponse = viaCepClient.consultaCep(cep);
 
+            aluno.getEndereco().setLocalidade(enderecoResponse.getLocalidade());
+            aluno.getEndereco().setUf(enderecoResponse.getUf());
+            aluno.getEndereco().setBairro(enderecoResponse.getBairro());
+            aluno.getEndereco().setComplemento(enderecoResponse.getComplemento());
+            aluno.getEndereco().setLogradouro(enderecoResponse.getLogradouro());
+        }
+        catch(Exception e){
+            log.warn("Erro de integração: CEP não encontrado {} ", cep);
+        }
+    }
 }
